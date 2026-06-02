@@ -1,4 +1,5 @@
 E-Commerce Database Schema Documentation
+
 --> Overview
 
 This database is designed for a basic e-commerce system that supports:
