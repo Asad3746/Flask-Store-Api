@@ -15,7 +15,7 @@ CREATE TABLE products (
 
 CREATE TABLE carts (
     cart_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT UNIQUE NOT NULL,
+    user_id INT NOT NULL,
     status VARCHAR(50) DEFAULT 'active',
 
     FOREIGN KEY (user_id)
@@ -41,12 +41,17 @@ CREATE TABLE cart_items (
 CREATE TABLE orders (
     order_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
+    cart_id INT,
     total_amount DECIMAL(10,2) DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending',
 
     FOREIGN KEY (user_id)
         REFERENCES users(user_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (cart_id)
+        REFERENCES carts(cart_id)
+        ON DELETE SET NULL
 );
 
 CREATE TABLE order_items (
