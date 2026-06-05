@@ -2,3 +2,5 @@ flask
 flask-sqlalchemy
 pymysql
 python-dotenv
+psycopg[binary]
+gunicorn
