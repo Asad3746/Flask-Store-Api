@@ -1,5 +1,4 @@
 # Local secrets — never commit
-config.py
 .env
 .env.local
 .env.*.local

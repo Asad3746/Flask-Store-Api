@@ -20,6 +20,10 @@ class ValidationError(AppError):
     code = "VALIDATION_ERROR"
     message = "Invalid request"
 
+class IdOutOfRangeError(AppError):
+    status_code = 422
+    code = "ID_OUT_OF_RANGE"
+    message = "ID exceeds maximum allowed value"
 
 class UserNotFoundError(AppError):
     status_code = 404

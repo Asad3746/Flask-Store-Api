@@ -9,12 +9,29 @@ from exceptions import (
     CartItemNotFoundError,
     CartAlreadyExistsError,
     InsufficientStockError,
+    IdOutOfRangeError,
 )
 
 logger = logging.getLogger(__name__)
 
+MYSQL_INT_MAX = 2147483647
+MYSQL_INT_MIN = 1
+
+def validate_id(value, field_name):
+    if value < MYSQL_INT_MIN or value > MYSQL_INT_MAX:
+        raise IdOutOfRangeError(
+            message=f"{field_name} exceeds allowed MySQL INT range.",
+            details={
+                "field": field_name,
+                "value": value,
+                "min_allowed": MYSQL_INT_MIN,
+                "max_allowed": MYSQL_INT_MAX,
+            },
+        )
 
 def _get_cart(cart_id):
+    validate_id(cart_id, "cart_id")
+
     cart = Cart.query.get(cart_id)
     if not cart:
         raise CartNotFoundError(
@@ -38,6 +55,7 @@ def _get_active_cart(cart_id, action):
 
 
 def create_cart(user_id):
+    validate_id(user_id, "user_id")
     if not User.query.get(user_id):
         raise UserNotFoundError(
             message=f"Cannot create cart. No user exists with user_id {user_id}.",
@@ -68,6 +86,9 @@ def create_cart(user_id):
 
 
 def add_item(cart_id, product_id, quantity):
+    validate_id(cart_id, "cart_id")
+    validate_id(product_id, "product_id")
+
     _get_active_cart(cart_id, "add item")
 
     product = Product.query.get(product_id)
@@ -125,6 +146,9 @@ def add_item(cart_id, product_id, quantity):
 
 
 def remove_item(cart_id, product_id):
+    validate_id(cart_id, "cart_id")
+    validate_id(product_id, "product_id")
+
     _get_active_cart(cart_id, "remove item")
 
     item = CartItem.query.filter_by(
@@ -149,6 +173,7 @@ def remove_item(cart_id, product_id):
 
 
 def delete_cart(cart_id):
+    validate_id(cart_id, "cart_id")
     _get_active_cart(cart_id, "delete cart")
     cart = Cart.query.get(cart_id)
     db.session.delete(cart)
