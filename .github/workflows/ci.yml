@@ -1,35 +1,36 @@
-name: CI Pipeline
+name: CI + Postman Tests
 
 on:
   push:
     branches:
       - main
 
-  pull_request:
-    branches:
-      - main
-
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set Up Python
-        uses: actions/setup-python@v5
+      - name: Set Up Node.js (for Newman)
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.13"
+          node-version: "20"
 
-      - name: Install Dependencies
+      - name: Install Newman
         run: |
-          pip install -r requirements.txt
+          npm install -g newman
 
-      - name: Check Python Syntax
+      - name: Run Postman Collection
         run: |
-          python -m py_compile api.py
+          newman run postman_collection.json \
+            -e postman_environment.json \
+            --reporters cli,junit \
+            --reporter-junit-export results.xml
 
-      - name: Build Docker Image
-        run: |
-          docker build -t ecommerce-api .
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: postman-test-report
+          path: results.xml
