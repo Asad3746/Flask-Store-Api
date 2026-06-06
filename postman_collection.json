@@ -49,11 +49,9 @@
               "});\r",
               "\r",
               "// Save cart_id for all other requests\r",
+              "// Save cart_id for all other requests\r",
               "pm.environment.set(\"cart_id\", jsonData.data.cart_id);\r",
-              "console.log(\"Cart ID saved:\", jsonData.data.cart_id);\r",
-              "\r",
-              "let res = pm.response.json();\r",
-              "pm.environment.set(\"cart_id\", res.cart_id);"
+              "console.log(\"Cart ID saved:\", jsonData.data.cart_id);"
             ],
             "type": "text/javascript",
             "packages": {},
