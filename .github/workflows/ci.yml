@@ -9,48 +9,45 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set Up Node.js (for Newman)
+      - name: Setup Node (LTS stable)
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
+
+      - name: Verify Node Version
+        run: node -v
 
       - name: Install Newman
-        run: |
-          npm install -g newman
+        run: npm install -g newman
 
-      # 🔥 WAIT FOR RENDER API TO WAKE UP
       - name: Wait for Render API
         run: |
-          echo "Waiting for API to be ready..."
+          echo "Waiting for API..."
           for i in {1..10}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://ecommerce-api-wks8.onrender.com || true)
-            echo "Attempt $i - Status: $STATUS"
+            echo "Attempt $i -> $STATUS"
 
             if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 404 ]; then
-              echo "API is responding"
+              echo "API is up"
               break
             fi
 
             sleep 5
           done
 
-      # 🧪 RUN POSTMAN TESTS
-      - name: Run Postman Collection
+      - name: Run Postman Tests (FULL LOGS)
         run: |
           newman run postman_collection.json \
             -e postman_environment.json \
             --env-var "base_url=https://ecommerce-api-wks8.onrender.com" \
+            --verbose \
             --reporters cli,junit \
             --reporter-junit-export results.xml
 
-      # 📄 UPLOAD REPORT
       - name: Upload Test Report
         uses: actions/upload-artifact@v4
         with:
