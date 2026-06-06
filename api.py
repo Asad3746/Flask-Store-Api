@@ -19,17 +19,18 @@ def create_app():
     register_error_handlers(app)
     register_routes(app)
 
+    # optional: ensure tables are reachable (safe check only)
+    with app.app_context():
+        try:
+            db.engine.connect()
+            app.logger.info("Database connection successful")
+        except Exception as e:
+            app.logger.error(f"Database connection failed: {e}")
+
     return app
 
 
 app = create_app()
 
-with app.app_context():
-    try:
-        db.engine.connect()
-    except Exception:
-        app.logger.error("Database connection failed")
-
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
