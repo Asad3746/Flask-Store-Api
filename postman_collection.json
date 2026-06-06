@@ -62,9 +62,7 @@
           "listen": "prerequest",
           "script": {
             "exec": [
-              "// Generates unique userId every run to avoid 409\r",
-              "const userId = Date.now() % 1000000; \r",
-              "pm.environment.set(\"user_id\", userId);"
+              ""
             ],
             "type": "text/javascript",
             "packages": {},
@@ -77,7 +75,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"user_id\":{{cart_id}}\r\n}",
+          "raw": "{\r\n    \"user_id\": {{user_id}}\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -598,14 +596,14 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/cart/items/25",
+          "raw": "{{base_url}}/cart/items/{{cart_id}}",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "cart",
             "items",
-            "25"
+            "{{cart_id}}"
           ]
         }
       },
@@ -1121,6 +1119,60 @@
             "packages": {},
             "requests": {}
           }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Create a cart, add item, checkout it, then this test \r",
+              "// tries to checkout again → CART_NOT_ACTIVE\r",
+              "const baseUrl = pm.environment.get(\"base_url\");\r",
+              "const userId = Date.now() % 100000;\r",
+              "\r",
+              "// Step 1: Create cart\r",
+              "pm.sendRequest({\r",
+              "    url: baseUrl + \"/cart\",\r",
+              "    method: \"POST\",\r",
+              "    header: { \"Content-Type\": \"application/json\" },\r",
+              "    body: {\r",
+              "        mode: \"raw\",\r",
+              "        raw: JSON.stringify({ \"user_id\": userId })\r",
+              "    }\r",
+              "}, function(err, res) {\r",
+              "    const cartId = res.json().data.cart_id;\r",
+              "    \r",
+              "    // Step 2: Add item\r",
+              "    pm.sendRequest({\r",
+              "        url: baseUrl + \"/cart/items/\" + cartId,\r",
+              "        method: \"POST\",\r",
+              "        header: { \"Content-Type\": \"application/json\" },\r",
+              "        body: {\r",
+              "            mode: \"raw\",\r",
+              "            raw: JSON.stringify({ \"product_id\": 1, \"quantity\": 1 })\r",
+              "        }\r",
+              "    }, function(err2, res2) {\r",
+              "        \r",
+              "        // Step 3: Checkout once\r",
+              "        pm.sendRequest({\r",
+              "            url: baseUrl + \"/orders\",\r",
+              "            method: \"POST\",\r",
+              "            header: { \"Content-Type\": \"application/json\" },\r",
+              "            body: {\r",
+              "                mode: \"raw\",\r",
+              "                raw: JSON.stringify({ \"cart_id\": cartId })\r",
+              "            }\r",
+              "        }, function(err3, res3) {\r",
+              "            // Now cart is checked_out\r",
+              "            pm.environment.set(\"inactive_cart_id\", cartId);\r",
+              "            console.log(\"Inactive cart ready:\", cartId);\r",
+              "        });\r",
+              "    });\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
         }
       ],
       "request": {
@@ -1128,7 +1180,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"cart_id\":22\r\n}",
+          "raw": "{\r\n    \"cart_id\": {{inactive_cart_id}}\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -1173,6 +1225,32 @@
             "packages": {},
             "requests": {}
           }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Create a fresh empty cart for this test\r",
+              "const response = pm.sendRequest({\r",
+              "    url: pm.environment.get(\"base_url\") + \"/cart\",\r",
+              "    method: \"POST\",\r",
+              "    header: { \"Content-Type\": \"application/json\" },\r",
+              "    body: {\r",
+              "        mode: \"raw\",\r",
+              "        raw: JSON.stringify({ \"user_id\": Date.now() % 100000 })\r",
+              "    }\r",
+              "}, function(err, res) {\r",
+              "    if (!err) {\r",
+              "        const json = res.json();\r",
+              "        pm.environment.set(\"empty_cart_id\", json.data.cart_id);\r",
+              "        console.log(\"Empty cart created:\", json.data.cart_id);\r",
+              "    }\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
         }
       ],
       "request": {
@@ -1180,7 +1258,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"cart_id\":25\r\n}",
+          "raw": "{\r\n    \"cart_id\": {{empty_cart_id}}\r\n}",
           "options": {
             "raw": {
               "language": "json"
