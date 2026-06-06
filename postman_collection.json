@@ -50,7 +50,10 @@
               "\r",
               "// Save cart_id for all other requests\r",
               "pm.environment.set(\"cart_id\", jsonData.data.cart_id);\r",
-              "console.log(\"Cart ID saved:\", jsonData.data.cart_id);"
+              "console.log(\"Cart ID saved:\", jsonData.data.cart_id);\r",
+              "\r",
+              "let res = pm.response.json();\r",
+              "pm.environment.set(\"cart_id\", res.cart_id);"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -76,7 +79,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"user_id\":14\r\n}",
+          "raw": "{\r\n    \"user_id\":{{cart_id}}\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -84,15 +87,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart"
           ]
@@ -157,15 +155,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart"
           ]
@@ -233,15 +226,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart"
           ]
@@ -306,15 +294,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart"
           ]
@@ -382,15 +365,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart"
           ]
@@ -451,19 +429,14 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart/items/27",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart/items/{{cart_id}}",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart",
             "items",
-            "27"
+            "{{cart_id}}"
           ]
         }
       },
@@ -510,15 +483,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart/items/32487728947979",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart/items/32487728947979",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart",
             "items",
@@ -572,15 +540,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart/items/25",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart/items/25",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart",
             "items",
@@ -637,15 +600,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart/items/25",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart/items/25",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart",
             "items",
@@ -702,15 +660,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart/items/25",
-          "protocol": "http",
+          "raw": "{{cart_id}}/cart/items/25",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{cart_id}}"
           ],
-          "port": "5000",
           "path": [
             "cart",
             "items",
@@ -756,8 +709,12 @@
         {
           "listen": "prerequest",
           "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
             "packages": {},
-            "type": "text/javascript"
+            "requests": {}
           }
         }
       ],
@@ -774,15 +731,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart/items/99999",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart/items/99999",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart",
             "items",
@@ -834,7 +786,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"product_id\": 3\r\n}",
+          "raw": "{\r\n  \"product_id\": 2\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -842,19 +794,14 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart/items/27",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart/items/{{cart_id}}",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart",
             "items",
-            "27"
+            "{{cart_id}}"
           ]
         }
       },
@@ -901,15 +848,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart/items/32765835634765",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart/items/32765835634765",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart",
             "items",
@@ -960,15 +902,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart/items/25",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart/items/25",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart",
             "items",
@@ -1019,15 +956,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart/items/32493",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart/items/32493",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart",
             "items",
@@ -1094,7 +1026,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"cart_id\":28\r\n}",
+          "raw": "{\r\n    \"cart_id\":{{cart_id}}\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -1102,15 +1034,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/orders",
-          "protocol": "http",
+          "raw": "{{base_url}}/orders",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "orders"
           ]
@@ -1159,15 +1086,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/orders",
-          "protocol": "http",
+          "raw": "{{base_url}}/orders",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "orders"
           ]
@@ -1216,15 +1138,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/orders",
-          "protocol": "http",
+          "raw": "{{base_url}}/orders",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "orders"
           ]
@@ -1273,15 +1190,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/orders",
-          "protocol": "http",
+          "raw": "{{base_url}}/orders",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "orders"
           ]
@@ -1339,18 +1251,13 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart/29",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart/{{cart_id}}",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart",
-            "29"
+            "{{cart_id}}"
           ]
         }
       },
@@ -1397,15 +1304,10 @@
           }
         },
         "url": {
-          "raw": "http://127.0.0.1:5000/cart/24647",
-          "protocol": "http",
+          "raw": "{{base_url}}/cart/24647",
           "host": [
-            "127",
-            "0",
-            "0",
-            "1"
+            "{{base_url}}"
           ],
-          "port": "5000",
           "path": [
             "cart",
             "24647"
