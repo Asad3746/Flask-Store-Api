@@ -1271,12 +1271,20 @@
               "        raw: JSON.stringify({ \"user_id\": 8 })\r",
               "    }\r",
               "}, function(err, res) {\r",
-              "    const json = res.json();\r",
+              "    var json = res.json();\r",
               "    if (!err && json.data) {\r",
               "        pm.environment.set(\"empty_cart_id\", json.data.cart_id);\r",
               "        console.log(\"Empty cart created:\", json.data.cart_id);\r",
               "    } else if (json.code === \"CART_ALREADY_EXISTS\") {\r",
-              "        const match = json.error.match(/cart_id (\\d+)/);"
+              "        var match = json.error.match(/cart_id (\\d+)/);\r",
+              "        if (match) {\r",
+              "            pm.environment.set(\"empty_cart_id\", parseInt(match[1]));\r",
+              "            console.log(\"Using existing cart:\", match[1]);\r",
+              "        }\r",
+              "    } else {\r",
+              "        console.log(\"Failed:\", json);\r",
+              "    }\r",
+              "});"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -1458,19 +1466,7 @@
         "packages": {},
         "requests": {},
         "exec": [
-          "const baseUrl = pm.environment.get(\"base_url\");\r",
-          "console.log(\"Starting cleanup...\");\r",
-          "\r",
-          "pm.sendRequest({\r",
-          "    url: baseUrl + \"/test/cleanup\",\r",
-          "    method: \"DELETE\"\r",
-          "}, function(err, res) {\r",
-          "    if (!err) {\r",
-          "        console.log(\"Cleanup done:\", res.json());\r",
-          "    } else {\r",
-          "        console.log(\"Cleanup failed:\", err);\r",
-          "    }\r",
-          "});"
+          ""
         ]
       }
     },
