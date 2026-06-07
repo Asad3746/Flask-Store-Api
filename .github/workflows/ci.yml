@@ -34,9 +34,20 @@ jobs:
         run: |
           PGPASSWORD=X9jS1xOSEq7PImFZ4FCXxgz9KCmMJbHG psql \
             "postgresql://flask_store_db_mxcn_user@dpg-d8hdqvk2m8qs73b1qlvg-a.singapore-postgres.render.com/flask_store_db_mxcn" \
-            -c "DELETE FROM carts WHERE user_id IN (7,8, 9, 10);"
+            -c "DELETE FROM carts WHERE user_id IN (7, 8, 9, 10);"
         env:
           PGPASSWORD: X9jS1xOSEq7PImFZ4FCXxgz9KCmMJbHG
+
+      - name: Run Database Migrations (Flyway)
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/flyway/migrations:/flyway/sql \
+            flyway/flyway:latest \
+            -url="jdbc:postgresql://dpg-d8hdqvk2m8qs73b1qlvg-a.singapore-postgres.render.com/flask_store_db_mxcn" \
+            -user="flask_store_db_mxcn_user" \
+            -password="X9jS1xOSEq7PImFZ4FCXxgz9KCmMJbHG" \
+            -locations="filesystem:/flyway/sql" \
+            migrate
 
       - name: Wait for Render API
         run: |
