@@ -51,7 +51,10 @@
               "// Save cart_id for all other requests\r",
               "// Save cart_id for all other requests\r",
               "pm.environment.set(\"cart_id\", jsonData.data.cart_id);\r",
-              "console.log(\"Cart ID saved:\", jsonData.data.cart_id);"
+              "console.log(\"Cart ID saved:\", jsonData.data.cart_id);\r",
+              "\r",
+              "console.log(\"base_url value:\", pm.environment.get(\"base_url\"));\r",
+              "console.log(\"test_check value:\", pm.environment.get(\"test_check\"));"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -62,7 +65,13 @@
           "listen": "prerequest",
           "script": {
             "exec": [
-              ""
+              "// Warmup API if sleeping\r",
+              "pm.sendRequest({\r",
+              "    url: pm.environment.get(\"base_url\") + \"/cart\",\r",
+              "    method: \"GET\"\r",
+              "}, function(err, res) {\r",
+              "    console.log(\"API warmed up\");\r",
+              "});"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -1262,13 +1271,12 @@
               "        raw: JSON.stringify({ \"user_id\": 8 })\r",
               "    }\r",
               "}, function(err, res) {\r",
-              "    if (!err && res.json().data) {\r",
-              "        pm.environment.set(\"empty_cart_id\", res.json().data.cart_id);\r",
-              "        console.log(\"Empty cart created:\", res.json().data.cart_id);\r",
-              "    } else {\r",
-              "        console.log(\"Failed:\", res.json());\r",
-              "    }\r",
-              "});"
+              "    const json = res.json();\r",
+              "    if (!err && json.data) {\r",
+              "        pm.environment.set(\"empty_cart_id\", json.data.cart_id);\r",
+              "        console.log(\"Empty cart created:\", json.data.cart_id);\r",
+              "    } else if (json.code === \"CART_ALREADY_EXISTS\") {\r",
+              "        const match = json.error.match(/cart_id (\\d+)/);"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -1440,6 +1448,42 @@
         }
       },
       "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          "const baseUrl = pm.environment.get(\"base_url\");\r",
+          "console.log(\"Starting cleanup...\");\r",
+          "\r",
+          "pm.sendRequest({\r",
+          "    url: baseUrl + \"/test/cleanup\",\r",
+          "    method: \"DELETE\"\r",
+          "}, function(err, res) {\r",
+          "    if (!err) {\r",
+          "        console.log(\"Cleanup done:\", res.json());\r",
+          "    } else {\r",
+          "        console.log(\"Cleanup failed:\", err);\r",
+          "    }\r",
+          "});"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
     }
   ]
 }
