@@ -1015,6 +1015,30 @@
             "packages": {},
             "requests": {}
           }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const baseUrl = pm.environment.get(\"base_url\");\r",
+              "const cartId = pm.environment.get(\"cart_id\");\r",
+              "\r",
+              "pm.sendRequest({\r",
+              "    url: baseUrl + \"/cart/items/\" + cartId,\r",
+              "    method: \"POST\",\r",
+              "    header: { \"Content-Type\": \"application/json\" },\r",
+              "    body: {\r",
+              "        mode: \"raw\",\r",
+              "        raw: JSON.stringify({ \"product_id\": 2, \"quantity\": 1 })\r",
+              "    }\r",
+              "}, function(err, res) {\r",
+              "    console.log(\"Item added for checkout:\", res.json());\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
         }
       ],
       "request": {
@@ -1145,7 +1169,7 @@
               "                header: { \"Content-Type\": \"application/json\" },\r",
               "                body: {\r",
               "                    mode: \"raw\",\r",
-              "                    raw: JSON.stringify({ \"product_id\": 1, \"quantity\": 1 })\r",
+              "                    raw: JSON.stringify({ \"product_id\": 2, \"quantity\": 1 })\r",
               "                }\r",
               "            }, function(err2, res2) {\r",
               "\r",
