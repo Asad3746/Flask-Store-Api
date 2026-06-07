@@ -34,7 +34,7 @@ jobs:
         run: |
           PGPASSWORD=X9jS1xOSEq7PImFZ4FCXxgz9KCmMJbHG psql \
             "postgresql://flask_store_db_mxcn_user@dpg-d8hdqvk2m8qs73b1qlvg-a.singapore-postgres.render.com/flask_store_db_mxcn" \
-            -c "DELETE FROM orders; DELETE FROM cart_items; DELETE FROM carts;"
+            -c "DELETE FROM order_items; DELETE FROM orders; DELETE FROM cart_items; DELETE FROM carts;"
         env:
           PGPASSWORD: X9jS1xOSEq7PImFZ4FCXxgz9KCmMJbHG
 
