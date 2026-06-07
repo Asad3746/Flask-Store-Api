@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Use Node 18 (MOST STABLE for Newman)
+      - name: Use Node 18
         uses: actions/setup-node@v4
         with:
           node-version: "18"
@@ -24,10 +24,19 @@ jobs:
       - name: Verify Node
         run: node -v
 
-      - name: Install Newman
+      - name: Install Newman and PostgreSQL client
         run: |
           npm install -g newman
           newman -v
+          sudo apt-get install -y postgresql-client
+
+      - name: Clean up test data before run
+        run: |
+          PGPASSWORD=X9jS1xOSEq7PImFZ4FCXxgz9KCmMJbHG psql \
+            "postgresql://flask_store_db_mxcn_user@dpg-d8hdqvk2m8qs73b1qlvg-a.singapore-postgres.render.com/flask_store_db_mxcn" \
+            -c "DELETE FROM carts WHERE user_id IN (8, 9, 10);"
+        env:
+          PGPASSWORD: X9jS1xOSEq7PImFZ4FCXxgz9KCmMJbHG
 
       - name: Wait for Render API
         run: |
