@@ -19,7 +19,20 @@ def create_app():
     register_error_handlers(app)
     register_routes(app)
 
-    # optional: ensure tables are reachable (safe check only)
+    @app.route("/test/cleanup", methods=["DELETE"])
+    def cleanup_test_data():
+        from models import Cart, CartItem, Order, OrderItem
+        try:
+            OrderItem.query.delete()
+            Order.query.delete()
+            CartItem.query.delete()
+            Cart.query.delete()
+            db.session.commit()
+            return {"success": True, "message": "Test data cleaned up"}, 200
+        except Exception as e:
+            db.session.rollback()
+            return {"success": False, "error": str(e)}, 500
+
     with app.app_context():
         try:
             db.engine.connect()

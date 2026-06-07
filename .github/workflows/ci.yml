@@ -24,19 +24,29 @@ jobs:
       - name: Verify Node
         run: node -v
 
-      - name: Install Newman and PostgreSQL client
+      - name: Install Newman
         run: |
           npm install -g newman
           newman -v
-          sudo apt-get install -y postgresql-client
+
+      - name: Wait for Render API
+        run: |
+          echo "Checking API..."
+          for i in {1..24}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://ecommerce-api-wks8.onrender.com || true)
+            echo "Attempt $i: $STATUS"
+            if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 404 ]; then
+              echo "API ready"
+              break
+            fi
+            sleep 10
+          done
 
       - name: Clean up test data before run
         run: |
-          PGPASSWORD=X9jS1xOSEq7PImFZ4FCXxgz9KCmMJbHG psql \
-            "postgresql://flask_store_db_mxcn_user@dpg-d8hdqvk2m8qs73b1qlvg-a.singapore-postgres.render.com/flask_store_db_mxcn" \
-            -c "DELETE FROM order_items; DELETE FROM orders; DELETE FROM cart_items; DELETE FROM carts;"
-        env:
-          PGPASSWORD: X9jS1xOSEq7PImFZ4FCXxgz9KCmMJbHG
+          echo "Cleaning up test data..."
+          curl -s -X DELETE https://ecommerce-api-wks8.onrender.com/test/cleanup
+          echo "Cleanup done"
 
       - name: Run Database Migrations (Flyway)
         run: |
@@ -50,19 +60,6 @@ jobs:
             -baselineOnMigrate=true \
             -baselineVersion=0 \
             migrate
-
-      - name: Wait for Render API
-        run: |
-          echo "Checking API..."
-          for i in {1..10}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://ecommerce-api-wks8.onrender.com || true)
-            echo "Attempt $i: $STATUS"
-            if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 404 ]; then
-              echo "API ready"
-              break
-            fi
-            sleep 5
-          done
 
       - name: Run Postman Tests
         run: |
