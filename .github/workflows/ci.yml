@@ -47,6 +47,8 @@ jobs:
             -user="flask_store_db_mxcn_user" \
             -password="X9jS1xOSEq7PImFZ4FCXxgz9KCmMJbHG" \
             -locations="filesystem:/flyway/sql" \
+            -baselineOnMigrate=true \
+            -baselineVersion=0 \
             migrate
 
       - name: Wait for Render API
