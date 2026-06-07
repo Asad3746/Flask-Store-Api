@@ -588,7 +588,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"product_id\": 1,\r\n  \"quantity\": 100\r\n}",
+          "raw": "{\r\n    \"product_id\": 1,\r\n    \"quantity\": 1\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -648,7 +648,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"product_id\": 3897897,\r\n  \"quantity\": 1\r\n}",
+          "raw": "{\r\n    \"product_id\": 999999,\r\n    \"quantity\": 1\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -656,14 +656,14 @@
           }
         },
         "url": {
-          "raw": "{{cart_id}}/cart/items/25",
+          "raw": "{{base_url}}/cart/items/{{cart_id}}",
           "host": [
-            "{{cart_id}}"
+            "{{base_url}}"
           ],
           "path": [
             "cart",
             "items",
-            "25"
+            "{{cart_id}}"
           ]
         }
       },
@@ -966,6 +966,68 @@
       "response": []
     },
     {
+      "name": "Delete Cart",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let jsonData = pm.response.json();\r",
+              "\r",
+              "pm.test(\"✅ Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"✅ Response time under 5000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(5000);\r",
+              "});\r",
+              "pm.test(\"✅ Success is true\", function () {\r",
+              "    pm.expect(jsonData.success).to.eql(true);\r",
+              "});\r",
+              "pm.test(\"✅ Message is correct\", function () {\r",
+              "    pm.expect(jsonData.message).to.eql(\"Cart deleted successfully\");\r",
+              "});\r",
+              "pm.test(\"✅ Data is null\", function () {\r",
+              "    pm.expect(jsonData.data).to.be.null;\r",
+              "});\r",
+              "pm.test(\"✅ Response has all 3 top level fields\", function () {\r",
+              "    pm.expect(jsonData).to.have.all.keys(\"success\", \"message\", \"data\");\r",
+              "});\r",
+              "pm.test(\"✅ No error field on success\", function () {\r",
+              "    pm.expect(jsonData).to.not.have.property(\"error\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/cart/{{cart_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "cart",
+            "{{cart_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "Checkout",
       "event": [
         {
@@ -1124,87 +1186,47 @@
           "listen": "prerequest",
           "script": {
             "exec": [
-              "const baseUrl = pm.environment.get(\"base_url\");\r",
+              "(function() {\r",
+              "    const baseUrl = pm.environment.get(\"base_url\");\r",
               "\r",
-              "pm.sendRequest({\r",
-              "    url: baseUrl + \"/cart\",\r",
-              "    method: \"POST\",\r",
-              "    header: { \"Content-Type\": \"application/json\" },\r",
-              "    body: {\r",
-              "        mode: \"raw\",\r",
-              "        raw: JSON.stringify({ \"user_id\": 9 })\r",
-              "    }\r",
-              "}, function(err, res) {\r",
-              "    if (!err && res.json().data) {\r",
-              "        const cartId = res.json().data.cart_id;\r",
-              "\r",
-              "        pm.sendRequest({\r",
-              "            url: baseUrl + \"/cart/items/\" + cartId,\r",
-              "            method: \"POST\",\r",
-              "            header: { \"Content-Type\": \"application/json\" },\r",
-              "            body: {\r",
-              "                mode: \"raw\",\r",
-              "                raw: JSON.stringify({ \"product_id\": 1, \"quantity\": 1 })\r",
-              "            }\r",
-              "        }, function(err2, res2) {\r",
+              "    pm.sendRequest({\r",
+              "        url: baseUrl + \"/cart\",\r",
+              "        method: \"POST\",\r",
+              "        header: { \"Content-Type\": \"application/json\" },\r",
+              "        body: {\r",
+              "            mode: \"raw\",\r",
+              "            raw: JSON.stringify({ \"user_id\": 9 })\r",
+              "        }\r",
+              "    }, function(err, res) {\r",
+              "        if (!err && res.json().data) {\r",
+              "            const cartId = res.json().data.cart_id;\r",
               "\r",
               "            pm.sendRequest({\r",
-              "                url: baseUrl + \"/orders\",\r",
+              "                url: baseUrl + \"/cart/items/\" + cartId,\r",
               "                method: \"POST\",\r",
               "                header: { \"Content-Type\": \"application/json\" },\r",
               "                body: {\r",
               "                    mode: \"raw\",\r",
-              "                    raw: JSON.stringify({ \"cart_id\": cartId })\r",
+              "                    raw: JSON.stringify({ \"product_id\": 1, \"quantity\": 1 })\r",
               "                }\r",
-              "            }, function(err3, res3) {\r",
-              "                pm.environment.set(\"inactive_cart_id\", cartId);\r",
-              "                console.log(\"Inactive cart ready:\", cartId);\r",
+              "            }, function(err2, res2) {\r",
+              "\r",
+              "                pm.sendRequest({\r",
+              "                    url: baseUrl + \"/orders\",\r",
+              "                    method: \"POST\",\r",
+              "                    header: { \"Content-Type\": \"application/json\" },\r",
+              "                    body: {\r",
+              "                        mode: \"raw\",\r",
+              "                        raw: JSON.stringify({ \"cart_id\": cartId })\r",
+              "                    }\r",
+              "                }, function(err3, res3) {\r",
+              "                    pm.environment.set(\"inactive_cart_id\", cartId);\r",
+              "                    console.log(\"Inactive cart ready:\", cartId);\r",
+              "                });\r",
               "            });\r",
-              "        });\r",
-              "    } else {\r",
-              "        console.log(\"Failed:\", res.json());\r",
-              "    }\r",
-              "});const baseUrl = pm.environment.get(\"base_url\");\r",
-              "\r",
-              "pm.sendRequest({\r",
-              "    url: baseUrl + \"/cart\",\r",
-              "    method: \"POST\",\r",
-              "    header: { \"Content-Type\": \"application/json\" },\r",
-              "    body: {\r",
-              "        mode: \"raw\",\r",
-              "        raw: JSON.stringify({ \"user_id\": 9 })\r",
-              "    }\r",
-              "}, function(err, res) {\r",
-              "    if (!err && res.json().data) {\r",
-              "        const cartId = res.json().data.cart_id;\r",
-              "\r",
-              "        pm.sendRequest({\r",
-              "            url: baseUrl + \"/cart/items/\" + cartId,\r",
-              "            method: \"POST\",\r",
-              "            header: { \"Content-Type\": \"application/json\" },\r",
-              "            body: {\r",
-              "                mode: \"raw\",\r",
-              "                raw: JSON.stringify({ \"product_id\": 1, \"quantity\": 1 })\r",
-              "            }\r",
-              "        }, function(err2, res2) {\r",
-              "\r",
-              "            pm.sendRequest({\r",
-              "                url: baseUrl + \"/orders\",\r",
-              "                method: \"POST\",\r",
-              "                header: { \"Content-Type\": \"application/json\" },\r",
-              "                body: {\r",
-              "                    mode: \"raw\",\r",
-              "                    raw: JSON.stringify({ \"cart_id\": cartId })\r",
-              "                }\r",
-              "            }, function(err3, res3) {\r",
-              "                pm.environment.set(\"inactive_cart_id\", cartId);\r",
-              "                console.log(\"Inactive cart ready:\", cartId);\r",
-              "            });\r",
-              "        });\r",
-              "    } else {\r",
-              "        console.log(\"Failed:\", res.json());\r",
-              "    }\r",
-              "});"
+              "        }\r",
+              "    });\r",
+              "})();"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -1311,68 +1333,6 @@
           ],
           "path": [
             "orders"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Delete Cart",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "let jsonData = pm.response.json();\r",
-              "\r",
-              "pm.test(\"✅ Status code is 200\", function () {\r",
-              "    pm.response.to.have.status(200);\r",
-              "});\r",
-              "pm.test(\"✅ Response time under 5000ms\", function () {\r",
-              "    pm.expect(pm.response.responseTime).to.be.below(5000);\r",
-              "});\r",
-              "pm.test(\"✅ Success is true\", function () {\r",
-              "    pm.expect(jsonData.success).to.eql(true);\r",
-              "});\r",
-              "pm.test(\"✅ Message is correct\", function () {\r",
-              "    pm.expect(jsonData.message).to.eql(\"Cart deleted successfully\");\r",
-              "});\r",
-              "pm.test(\"✅ Data is null\", function () {\r",
-              "    pm.expect(jsonData.data).to.be.null;\r",
-              "});\r",
-              "pm.test(\"✅ Response has all 3 top level fields\", function () {\r",
-              "    pm.expect(jsonData).to.have.all.keys(\"success\", \"message\", \"data\");\r",
-              "});\r",
-              "pm.test(\"✅ No error field on success\", function () {\r",
-              "    pm.expect(jsonData).to.not.have.property(\"error\");\r",
-              "});"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n    \r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "{{base_url}}/cart/{{cart_id}}",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "cart",
-            "{{cart_id}}"
           ]
         }
       },
