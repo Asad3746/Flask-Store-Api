@@ -1,4 +1,4 @@
-name: CI + Postman Tests
+name: CI + Blue/Green Deployment
 
 on:
   push:
@@ -10,12 +10,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  # ─── Job 1: Code Quality ───────────────────────────────────────
+  code_quality:
     runs-on: ubuntu-latest
-
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,35 +32,43 @@ jobs:
           pip install bandit
           bandit -r . -lll
 
+  # ─── Job 2: Test ───────────────────────────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    needs: code_quality
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Use Node 18
         uses: actions/setup-node@v4
         with:
           node-version: "18"
-
-      - name: Verify Node
-        run: node -v
 
       - name: Install Newman
         run: |
           npm install -g newman
           newman -v
 
-      - name: Wait for Render API
+      - name: Wait for Blue API
         run: |
-          echo "Checking API..."
+          echo "Checking Blue API..."
           for i in {1..24}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://ecommerce-api-wks8.onrender.com || true)
             echo "Attempt $i: $STATUS"
             if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 404 ]; then
-              echo "API ready"
+              echo "Blue API ready"
               break
             fi
             sleep 10
           done
 
-      - name: Clean up test data before run
+      - name: Clean up test data
         run: |
-          echo "Cleaning up test data..."
+          echo "Cleaning up..."
           curl -s -X DELETE https://ecommerce-api-wks8.onrender.com/test/cleanup
           echo "Cleanup done"
 
@@ -80,7 +85,7 @@ jobs:
             -baselineVersion=0 \
             migrate
 
-      - name: Run Postman Tests
+      - name: Run Postman Tests Against Blue
         run: |
           newman run postman_collection.json \
             -e postman_environment.json \
@@ -89,13 +94,95 @@ jobs:
             --reporters cli,junit \
             --reporter-junit-export results.xml
 
-      - name: Upload Report
+      - name: Upload Test Report
         uses: actions/upload-artifact@v4
         with:
           name: postman-report
           path: results.xml
 
-      - name: Deploy to Render
-        if: github.ref == 'refs/heads/main'
+  # ─── Job 3: Blue/Green Deployment ─────────────────────────────
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 1 - Deploy to GREEN
+      - name: Deploy to GREEN
         run: |
-          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+          echo "Deploying to GREEN..."
+          curl -s -X POST ${{ secrets.RENDER_DEPLOY_HOOK_GREEN }}
+          echo "GREEN deployment triggered"
+
+      # Step 2 - Wait for GREEN to be ready
+      - name: Wait for GREEN to be ready
+        run: |
+          echo "Waiting for GREEN to wake up..."
+          for i in {1..24}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://ecommerce-api-green.onrender.com || true)
+            echo "Attempt $i: GREEN status = $STATUS"
+            if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 404 ]; then
+              echo "GREEN is ready"
+              break
+            fi
+            sleep 10
+          done
+
+      # Step 3 - Health check GREEN
+      - name: Health Check GREEN
+        id: health_check
+        run: |
+          echo "Running health check on GREEN..."
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST https://ecommerce-api-green.onrender.com/cart \
+            -H "Content-Type: application/json" \
+            -d '{"user_id": 99}')
+          echo "Health check status: $RESPONSE"
+          if [ "$RESPONSE" -eq 201 ] || [ "$RESPONSE" -eq 409 ]; then
+            echo "GREEN health check passed ✅"
+            echo "health=passed" >> $GITHUB_OUTPUT
+          else
+            echo "GREEN health check failed ❌"
+            echo "health=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      # Step 4 - Run Postman Tests Against GREEN
+      - name: Run Postman Tests Against GREEN
+        run: |
+          npm install -g newman
+          newman run postman_collection.json \
+            -e postman_environment.json \
+            --env-var "base_url=https://ecommerce-api-green.onrender.com" \
+            --verbose \
+            --reporters cli,junit \
+            --reporter-junit-export green-results.xml
+
+      - name: Upload GREEN Test Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: green-postman-report
+          path: green-results.xml
+
+      # Step 5 - Promote GREEN to BLUE (swap)
+      - name: Promote GREEN to BLUE
+        if: success()
+        run: |
+          echo "All tests passed on GREEN ✅"
+          echo "Promoting GREEN to BLUE..."
+          curl -s -X POST ${{ secrets.RENDER_DEPLOY_HOOK_BLUE }}
+          echo "BLUE updated with new version ✅"
+          echo "Blue/Green deployment complete 🎉"
+
+      # Step 6 - Rollback if GREEN failed
+      - name: Rollback to BLUE on failure
+        if: failure()
+        run: |
+          echo "GREEN deployment failed ❌"
+          echo "Rolling back to BLUE..."
+          curl -s -X POST ${{ secrets.RENDER_DEPLOY_HOOK_BLUE }}
+          echo "Rollback complete ✅ BLUE is still live"
+          exit 1
