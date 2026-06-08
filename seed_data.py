@@ -21,7 +21,7 @@ with app.app_context():
 
     if Product.query.count() == 0:
         products = [
-            Product(name="Laptop", description="Gaming Laptop", price=1500.00, stock=100),
+            Product(name="Laptop", description="Gaming Laptop", price=1500.00, stock=0),
             Product(name="Mouse", description="Wireless Mouse", price=25.00, stock=500),
             Product(name="Keyboard", description="Mechanical Keyboard", price=75.00, stock=300),
             Product(name="Monitor", description="24 Inch Monitor", price=250.00, stock=150),

@@ -31,3 +31,7 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Utility scripts - not for production
+seed_million.py
+delete_all.py
