@@ -71,7 +71,6 @@ def main():
         else:
             # Clean up any existing active cart for test user
             from models import Cart, CartItem
-            from services import cart_service
 
             existing = Cart.query.filter_by(user_id=user.user_id).first()
             if existing and existing.status == "active":
