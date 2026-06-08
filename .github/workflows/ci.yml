@@ -137,11 +137,10 @@ jobs:
         run: |
           echo "Running health check on GREEN..."
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST https://ecommerce-api-green.onrender.com/cart \
-            -H "Content-Type: application/json" \
-            -d '{"user_id": 99}')
+            https://ecommerce-api-green.onrender.com/test/cleanup \
+            -X DELETE)
           echo "Health check status: $RESPONSE"
-          if [ "$RESPONSE" -eq 201 ] || [ "$RESPONSE" -eq 409 ]; then
+          if [ "$RESPONSE" -eq 200 ]; then
             echo "GREEN health check passed ✅"
             echo "health=passed" >> $GITHUB_OUTPUT
           else
