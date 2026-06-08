@@ -29,16 +29,17 @@ def create_app():
             Cart.query.delete()
             db.session.commit()
             return {"success": True, "message": "Test data cleaned up"}, 200
-        except Exception as e:
+        except Exception:
             db.session.rollback()
-            return {"success": False, "error": str(e)}, 500
+            app.logger.exception("Failed to clean test data")
+            return {"success": False, "error": "Internal server error"}, 500
 
     with app.app_context():
         try:
             db.engine.connect()
             app.logger.info("Database connection successful")
-        except Exception as e:
-            app.logger.error(f"Database connection failed: {e}")
+        except Exception:
+            app.logger.exception("Database connection failed")
 
     return app
 

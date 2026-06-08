@@ -69,7 +69,7 @@ jobs:
             flyway/flyway:latest \
             -url="jdbc:postgresql://dpg-d8hdqvk2m8qs73b1qlvg-a.singapore-postgres.render.com/flask_store_db_mxcn" \
             -user="flask_store_db_mxcn_user" \
-            -password="X9jS1xOSEq7PImFZ4FCXxgz9KCmMJbHG" \
+            -password="${{ secrets.FLYWAY_DB_PASSWORD }}" \
             -locations="filesystem:/flyway/sql" \
             -baselineOnMigrate=true \
             -baselineVersion=0 \
