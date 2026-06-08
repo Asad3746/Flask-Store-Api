@@ -28,7 +28,7 @@ jobs:
       - name: Security Scan (Bandit)
         run: |
           pip install bandit
-          bandit -r .
+          bandit -r . -lll
 
       - name: Use Node 18
         uses: actions/setup-node@v4
