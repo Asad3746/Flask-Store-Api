@@ -1,3 +1,4 @@
+from etl.lake.export import run_exports
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -21,9 +22,12 @@ def task_aggregate():
     from etl.gold.aggregate import run_aggregate
     run_aggregate()
 
+def task_export_lake():
+    run_exports()
+
 with DAG(
     dag_id="ecommerce_medallion",
-    description="Bronze → Silver → Gold medallion ETL",
+    description="Bronze → Silver → Gold → Data Lake ETL",
     schedule="0 2 * * *",
     start_date=datetime(2024, 1, 1),
     catchup=False,
@@ -31,8 +35,24 @@ with DAG(
     tags=["ecommerce", "medallion"],
 ) as dag:
 
-    ingest = PythonOperator(task_id="bronze_ingest", python_callable=task_ingest)
-    clean  = PythonOperator(task_id="silver_clean",  python_callable=task_clean)
-    agg    = PythonOperator(task_id="gold_aggregate", python_callable=task_aggregate)
+    ingest = PythonOperator(
+        task_id="bronze_ingest",
+        python_callable=task_ingest
+    )
 
-    ingest >> clean >> agg
+    clean = PythonOperator(
+        task_id="silver_clean",
+        python_callable=task_clean
+    )
+
+    agg = PythonOperator(
+        task_id="gold_aggregate",
+        python_callable=task_aggregate
+    )
+
+    lake = PythonOperator(
+        task_id="lake_export",
+        python_callable=task_export_lake
+    )
+
+    ingest >> clean >> agg >> lake

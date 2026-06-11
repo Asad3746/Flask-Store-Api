@@ -1,0 +1,63 @@
+name: Ecommerce Medallion ETL
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  run-etl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      AIRFLOW_HOME: /home/runner/airflow
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: ${{ github.workspace }}/dags
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////home/runner/airflow/airflow.db
+
+      RENDER_DB_HOST:     ${{ secrets.RENDER_DB_HOST }}
+      RENDER_DB_PORT:     ${{ secrets.RENDER_DB_PORT }}
+      RENDER_DB_NAME:     ${{ secrets.RENDER_DB_NAME }}
+      RENDER_DB_USER:     ${{ secrets.RENDER_DB_USER }}
+      RENDER_DB_PASSWORD: ${{ secrets.RENDER_DB_PASSWORD }}
+      RENDER_DB_SSLMODE:  require
+
+      B2_ACCESS_KEY: ${{ secrets.B2_ACCESS_KEY }}
+      B2_SECRET_KEY: ${{ secrets.B2_SECRET_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.etl.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements.etl.txt
+
+      - name: Initialise Airflow DB
+        run: airflow db migrate
+
+      - name: Run ETL DAG
+        run: |
+          airflow dags test ecommerce_medallion $(date -u +%Y-%m-%dT%H:%M:%S)
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: airflow-logs
+          path: /home/runner/airflow/logs/
+          retention-days: 7
