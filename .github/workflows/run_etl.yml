@@ -52,6 +52,7 @@ jobs:
 
       - name: Run ETL DAG
         run: |
+          export PYTHONPATH=${{ github.workspace }}:$PYTHONPATH
           airflow dags test ecommerce_medallion $(date -u +%Y-%m-%dT%H:%M:%S)
 
       - name: Upload logs on failure
