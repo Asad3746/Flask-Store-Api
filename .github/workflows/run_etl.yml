@@ -55,6 +55,29 @@ jobs:
           export PYTHONPATH=${{ github.workspace }}:$PYTHONPATH
           airflow dags test ecommerce_medallion $(date -u +%Y-%m-%dT%H:%M:%S)
 
+      - name: Verify ETL output
+        run: |
+          export PYTHONPATH=${{ github.workspace }}:$PYTHONPATH
+          python -c "
+          import boto3, os
+          s3 = boto3.client('s3',
+            endpoint_url='https://s3.us-east-005.backblazeb2.com',
+            aws_access_key_id=os.environ['B2_ACCESS_KEY'],
+            aws_secret_access_key=os.environ['B2_SECRET_KEY']
+          )
+          objects = s3.list_objects_v2(Bucket='etl-data-lake', Prefix='gold/')
+          assert objects.get('KeyCount', 0) > 0, 'Gold layer is empty in B2!'
+          print(f'Gold layer files in B2: {objects[\"KeyCount\"]}')
+          "
+
+      - name: ETL Summary
+        if: success()
+        run: echo "ETL pipeline completed successfully at $(date -u) ✅"
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "::error::ETL pipeline failed at $(date -u). Check the airflow-logs artifact."
+
       - name: Upload logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
